@@ -14,6 +14,34 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public UserDaoJDBCImpl() {
     }
+    Connection connection = null;
+    PreparedStatement prepareStatement;
+    private void JDBCConnection(String sql) {
+        try {
+            connection = instance.openConnection();
+            prepareStatement = connection.prepareStatement(sql);
+            connection.setAutoCommit(false);
+            prepareStatement.execute();
+            connection.commit();
+        } catch (Exception e) {
+            if (connection != null) {
+                try {
+                    connection.rollback();
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+            throw new RuntimeException(e);
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
     public void createUsersTable() {
         String sql = """
@@ -25,64 +53,14 @@ public class UserDaoJDBCImpl implements UserDao {
                     age      TINYINT     NOT NULL
                 );
                 """;
-        Connection connection = null;
-        PreparedStatement prepareStatement;
-        try {
-            connection = instance.openConnection();
-            prepareStatement = connection.prepareStatement(sql);
-            connection.setAutoCommit(false);
-            prepareStatement.execute();
-            connection.commit();
-        } catch (Exception e) {
-            if (connection != null) {
-                try {
-                    connection.rollback();
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-            throw new RuntimeException(e);
-        } finally {
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+        JDBCConnection(sql);
     }
 
     public void dropUsersTable() {
         String sql = """
                 DROP TABLE IF EXISTS users;
                 """;
-        Connection connection = null;
-        PreparedStatement prepareStatement;
-        try {
-            connection = instance.openConnection();
-            prepareStatement = connection.prepareStatement(sql);
-            connection.setAutoCommit(false);
-            prepareStatement.execute();
-            connection.commit();
-        } catch (Exception e) {
-            if (connection != null) {
-                try {
-                    connection.rollback();
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-            throw new RuntimeException(e);
-        } finally {
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+        JDBCConnection(sql);
     }
 
     public void saveUser(String name, String lastName, byte age) {
@@ -90,8 +68,6 @@ public class UserDaoJDBCImpl implements UserDao {
                 INSERT INTO users (name, lastName, age)
                 VALUES (?, ?, ?)
                 """;
-        Connection connection = null;
-        PreparedStatement prepareStatement;
         try {
             connection = instance.openConnection();
             prepareStatement = connection.prepareStatement(sql);
@@ -128,8 +104,6 @@ public class UserDaoJDBCImpl implements UserDao {
                 FROM users
                 WHERE id = ?;
                 """;
-        Connection connection = null;
-        PreparedStatement prepareStatement;
         try {
             connection = instance.openConnection();
             prepareStatement = connection.prepareStatement(sql);
@@ -166,8 +140,6 @@ public class UserDaoJDBCImpl implements UserDao {
                        age
                 FROM users;
                 """;
-        Connection connection = null;
-        PreparedStatement prepareStatement;
         try {
             connection = instance.openConnection();
             prepareStatement = connection.prepareStatement(sql);
@@ -201,38 +173,12 @@ public class UserDaoJDBCImpl implements UserDao {
             }
         }
         return userList;
-
     }
 
     public void cleanUsersTable() {
         String sql = """
                 TRUNCATE users;
                 """;
-        Connection connection = null;
-        PreparedStatement prepareStatement;
-        try {
-            connection = instance.openConnection();
-            prepareStatement = connection.prepareStatement(sql);
-            connection.setAutoCommit(false);
-            prepareStatement.execute();
-            connection.commit();
-        } catch (Exception e) {
-            if (connection != null) {
-                try {
-                    connection.rollback();
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-            throw new RuntimeException(e);
-        } finally {
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+        JDBCConnection(sql);
     }
 }
