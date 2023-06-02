@@ -15,7 +15,7 @@ public class UserDaoHibernateImpl implements UserDao {
     public UserDaoHibernateImpl() {
     }
 
-    private void saveSql(String sql) {
+    private void executeSql(String sql) {
         try (var sessionFactory = instance.buildSessionFactory();
              var session = sessionFactory.openSession()) {
             session.beginTransaction();
@@ -40,7 +40,7 @@ public class UserDaoHibernateImpl implements UserDao {
                     age       TINYINT     NOT NULL
                 );
                 """;
-        saveSql(sql);
+        executeSql(sql);
     }
 
     @Override
@@ -48,7 +48,7 @@ public class UserDaoHibernateImpl implements UserDao {
         String sql = """
                 DROP TABLE IF EXISTS users;
                 """;
-        saveSql(sql);
+        executeSql(sql);
     }
 
     @Override
@@ -87,12 +87,10 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public List<User> getAllUsers() {
+        String sql = "FROM User";
         try (var sessionFactory = instance.buildSessionFactory();
              var session = sessionFactory.openSession()) {
-            var cb = session.getCriteriaBuilder();
-            var criteria = cb.createQuery(User.class);
-            criteria.from(User.class);
-            return session.createQuery(criteria).getResultList();
+            return session.createQuery(sql, User.class).getResultList();
         } catch (HibernateException e) {
             e.printStackTrace();
             return Collections.emptyList();
@@ -104,6 +102,6 @@ public class UserDaoHibernateImpl implements UserDao {
         String sql = """
                 TRUNCATE users;
                 """;
-        saveSql(sql);
+        executeSql(sql);
     }
 }

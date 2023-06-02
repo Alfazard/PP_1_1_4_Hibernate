@@ -2,11 +2,8 @@ package jm.task.core.jdbc.util;
 import jm.task.core.jdbc.model.User;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 
 public class Util {
     private static volatile Util instance;
@@ -28,21 +25,14 @@ public static Util getInstance() {
     private static final String USERNAME = "root";
     private static final String URL = "jdbc:mysql://localhost:3306/users_data_base";
 
-//Настройки соединения для Hibernate.
     public SessionFactory buildSessionFactory() {
-        Configuration configuration = buildConfigurationWithoutCfgXml();
-        configuration.configure();
+        Configuration configuration = BuildConfiguration();
 
-        return configuration.buildSessionFactory();
+        StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder()
+                .applySettings(configuration.getProperties());
+        return configuration.buildSessionFactory(ssrb.build());
     }
-// С использованием hibernate.cfg.xml
     private static Configuration BuildConfiguration() {
-        var configuration = new Configuration();
-        configuration.setPhysicalNamingStrategy(new CamelCaseToUnderscoresNamingStrategy());
-        return configuration;
-    }
-// Без hibernate.cfg.xml
-    private static Configuration buildConfigurationWithoutCfgXml() {
         var configuration = new Configuration();
         configuration.setPhysicalNamingStrategy(new CamelCaseToUnderscoresNamingStrategy());
         configuration.setProperty("connection.driver_class", "com.mysql.cj.jdbc.Driver");
@@ -52,23 +42,5 @@ public static Util getInstance() {
         configuration.setProperty("dialect", "org.hibernate.dialect.MySQLDialect");
         configuration.addAnnotatedClass(User.class);
         return configuration;
-    }
-// Настройки соединения для JDBC
-    static {
-        loadDriver();
-    }
-    private static void loadDriver() {
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    public Connection openConnection() {
-        try {
-            return DriverManager.getConnection(URL, USERNAME, PASSWORD);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
     }
 }
